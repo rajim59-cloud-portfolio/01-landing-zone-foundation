@@ -52,6 +52,7 @@ jobs:
           terraform plan \
             -var="alert_email=${{ secrets.ALERT_EMAIL }}" \
             -input=false \
+            -lock=false \
             -out=tfplan \
             -no-color
 
