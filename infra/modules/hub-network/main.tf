@@ -64,7 +64,7 @@ resource "azurerm_public_ip" "firewall" {
   resource_group_name = azurerm_resource_group.hub.name
   allocation_method   = "Static"
   sku                 = "Standard"
-  tags                = var.tags
+  tags                = merge(var.tags, { Env = "shared" })
 }
 
 resource "azurerm_public_ip" "firewall_mgmt" {
@@ -73,7 +73,7 @@ resource "azurerm_public_ip" "firewall_mgmt" {
   resource_group_name = azurerm_resource_group.hub.name
   allocation_method   = "Static"
   sku                 = "Standard"
-  tags                = var.tags
+  tags                = merge(var.tags, { Env = "shared" })
 }
 
 resource "azurerm_firewall_policy" "hub" {
@@ -115,7 +115,7 @@ resource "azurerm_public_ip" "bastion" {
   resource_group_name = azurerm_resource_group.hub.name
   allocation_method   = "Static"
   sku                 = "Standard"
-  tags                = var.tags
+  tags                = merge(var.tags, { Env = "shared" })
 }
 
 resource "azurerm_bastion_host" "hub" {
