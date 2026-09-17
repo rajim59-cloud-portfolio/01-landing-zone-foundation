@@ -1,0 +1,28 @@
+# ──────────────────────────────────────────────────────────────────
+# Copy this file to terraform.tfvars and fill in real values.
+#   cp terraform.tfvars.example terraform.tfvars
+# NEVER commit terraform.tfvars to Git.
+# ──────────────────────────────────────────────────────────────────
+
+subscription_id = "00000000-0000-0000-0000-000000000000"
+
+location = "eastus"
+
+# Required tags — enforced by Azure Policy
+tags = {
+  CostCenter = "portfolio-01"
+  Env        = "dev"
+  Owner      = "rajim"
+  Project    = "landing-zone-foundation"
+}
+
+# Network CIDR plan
+hub_vnet_cidr        = "10.0.0.0/16"
+spoke_app_vnet_cidr  = "10.1.0.0/16"
+spoke_data_vnet_cidr = "10.2.0.0/16"
+
+# Cost guardrail
+budget_amount_usd = 50
+
+# Alert email for budget + firewall alerts
+alert_email = "your-email@example.com"
