@@ -1,9 +1,9 @@
 # ================================================================
-# Local normalisation for Subscription Identifier
+# Local normalisation for Subscription Resource ID
 # ================================================================
 locals {
-  # Strips any "/subscriptions/" prefix to guarantee pure UUID format
-  subscription_uuid = trimprefix(var.scope_id, "/subscriptions/")
+  # Ensures subscription_id is consistently formatted as /subscriptions/<uuid>
+  subscription_resource_id = startswith(var.scope_id, "/subscriptions/") ? var.scope_id : "/subscriptions/${var.scope_id}"
 }
 
 # ================================================================
@@ -128,7 +128,7 @@ resource "azurerm_policy_definition" "deny_public_ip" {
 # ================================================================
 resource "azurerm_subscription_policy_assignment" "require_tags" {
   name                 = "assign-require-tags"
-  subscription_id      = local.subscription_uuid
+  subscription_id      = local.subscription_resource_id
   policy_definition_id = azurerm_policy_definition.require_tags.id
   display_name         = "Require tags on all resources"
   description          = "Requires presence of mandatory governance tags"
@@ -136,7 +136,7 @@ resource "azurerm_subscription_policy_assignment" "require_tags" {
 
 resource "azurerm_subscription_policy_assignment" "allowed_locations" {
   name                 = "assign-allowed-locations"
-  subscription_id      = local.subscription_uuid
+  subscription_id      = local.subscription_resource_id
   policy_definition_id = azurerm_policy_definition.allowed_locations.id
   display_name         = "Allowed locations"
   description          = "Restricts resource creation to approved regions"
@@ -150,7 +150,7 @@ resource "azurerm_subscription_policy_assignment" "allowed_locations" {
 
 resource "azurerm_subscription_policy_assignment" "deny_public_ip" {
   name                 = "assign-deny-public-ip"
-  subscription_id      = local.subscription_uuid
+  subscription_id      = local.subscription_resource_id
   policy_definition_id = azurerm_policy_definition.deny_public_ip.id
   display_name         = "Deny public IPs unless Env=shared"
   description          = "Denies public IPs on non-shared resources"

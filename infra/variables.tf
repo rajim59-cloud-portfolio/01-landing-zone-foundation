@@ -44,7 +44,7 @@ variable "spoke_data_vnet_cidr" {
 variable "budget_amount_usd" {
   description = "Monthly budget in USD"
   type        = number
-  default     = 20
+  default     = 50
 }
 
 variable "alert_email" {
