@@ -24,104 +24,158 @@ This document records the test cases, how to run them, and their results.
 ## Test 1: Terraform Validate
 
 **Command:**
+
 ```bash
 cd infra
 terraform fmt -check
 terraform validate
 
+```
+
 Expected: No formatting errors, no validation errors.
 
-Screenshot: docs/screenshots/terraform-validate.png
+Screenshot: `docs/screenshots/terraform-validate.png`
 
-Test 2: Terraform Plan
-Command:
+---
 
-bash
+## Test 2: Terraform Plan
+
+**Command:**
+
+```bash
+cd infra
 terraform plan -out=tfplan
+
+```
+
 Expected: Plan completes with expected resource count. No unexpected destroys.
 
-Screenshot: docs/screenshots/terraform-plan.png
+Screenshot: `docs/screenshots/terraform-plan.png`
 
-Test 3: Policy DENY (No Tags)
+---
+
+## Test 3: Policy DENY (No Tags)
+
 What it tests: Azure Policy should block resource creation without required tags.
 
-Command:
+**Command:**
 
-bash
-az deployment group create \
-  --resource-group rg-test \
-  --template-file tests/pilot-workload/main.tf \
-  --parameters location=eastus
-Expected: Deployment fails with RequestDisallowedByPolicy.
+```bash
+cd tests/pilot-workload
+terraform init
+terraform apply \
+  -var="subscription_id=$(az account show --query id -o tsv)" \
+  -var="location=malaysiawest" \
+  -target=azurerm_network_interface.pilot_vm_nic
 
-Screenshot: docs/screenshots/policy-denied.png
+```
 
-Test 4: Policy ALLOW (With Tags)
+Expected: Deployment fails with `RequestDisallowedByPolicy`.
+
+Screenshot: `docs/screenshots/policy-denied.png`
+
+---
+
+## Test 4: Policy ALLOW (With Tags)
+
 What it tests: Resource creation succeeds when all required tags are present.
 
-Command:
+**Command:**
 
-bash
-az deployment group create \
-  --resource-group rg-test \
-  --template-file tests/pilot-workload/main.tf \
-  --parameters location=eastus \
-  --parameters tags='{"CostCenter":"1234","Env":"test","Owner":"rajim"}'
+```bash
+cd tests/pilot-workload
+terraform apply \
+  -var="subscription_id=$(az account show --query id -o tsv)" \
+  -var="location=malaysiawest" \
+  -auto-approve
+
+```
+
 Expected: Deployment succeeds.
 
-Screenshot: docs/screenshots/policy-allowed.png
+Screenshot: `docs/screenshots/policy-allowed.png`
 
-Test 5: Hub ↔ Spoke Peering
+---
+
+## Test 5: Hub ↔ Spoke Peering
+
 What it tests: VNet peering is established and connected.
 
-Command:
+**Command:**
 
-bash
+```bash
 az network vnet peering list \
-  --resource-group rg-hub \
+  --resource-group rg-hub-network \
   --vnet-name vnet-hub \
-  --query "[].{Name:name, State:peeringState}"
+  --query "[].{Name:name, State:peeringState}" \
+  --output table
+
+```
+
 Expected: All peerings show Connected.
 
-Screenshot: docs/screenshots/peering-connected.png
+Screenshot: `docs/screenshots/peering-connected.png`
 
-Test 6: Spoke → Firewall → Internet
+---
+
+## Test 6: Spoke → Firewall → Internet
+
 What it tests: Outbound traffic from Spoke routes through the Firewall.
 
-Command (from a VM in Spoke-App):
+**Command (from a VM in Spoke-App):**
 
-bash
+```bash
 curl -s ifconfig.me
+
+```
+
 Expected: Output shows the Firewall's public IP, not the VM's.
 
-Screenshot: docs/screenshots/firewall-egress.png
+Screenshot: `docs/screenshots/firewall-egress.png`
 
-Test 7: RBAC Least-Privilege
+---
+
+## Test 7: RBAC Least-Privilege
+
 What it tests: The security-auditors group has only Reader access.
 
-Command:
+**Command:**
 
-bash
+```bash
 az role assignment list \
   --assignee security-auditors@domain.com \
   --all \
-  --query "[].{Role:roleDefinitionName, Scope:scope}"
+  --query "[].{Role:roleDefinitionName, Scope:scope}" \
+  --output table
+
+```
+
 Expected: Only Reader role assignments.
 
-Screenshot: docs/screenshots/rbac-auditor.png
+Screenshot: `docs/screenshots/rbac-auditor.png`
 
-Test 8: Destroy → Zero Cost
+---
+
+## Test 8: Destroy → Zero Cost
+
 What it tests: terraform destroy removes all billable resources.
 
-Command:
+**Command:**
 
-bash
-./scripts/destroy.sh
+```bash
+cd infra
+terraform destroy -auto-approve
+
+```
+
 Expected: All resources destroyed. Azure Cost Management shows $0.00 next day.
 
-Screenshot: docs/screenshots/cost-zero.png
+Screenshot: `docs/screenshots/cost-zero.png`
 
-Automation
-Tests 1–2 run on every PR via .github/workflows/ci-validate.yml and ci-plan.yml.
+---
 
-Tests 3–8 run weekly via .github/workflows/integration-test.yml using a pilot workload.
+## Automation
+
+Tests 1–2 run on every PR via `.github/workflows/ci-validate.yml` and `ci-plan.yml`.
+
+Tests 3–8 run weekly via `.github/workflows/integration-test.yml` using a pilot workload.
