@@ -1,18 +1,13 @@
 #!/usr/bin/env bash
-# ------------------------------------------------------------------
-# bootstrap.sh — One-time setup for Terraform remote state backend.
-# Creates: Resource Group + Storage Account + Container
-# Run this ONCE before `terraform init`.
-# ------------------------------------------------------------------
 set -euo pipefail
 
 # ─── Configuration ────────────────────────────────────────────────
-LOCATION="${LOCATION:-eastus}"
+LOCATION="${LOCATION:-malaysiawest}"
 RESOURCE_GROUP="${RESOURCE_GROUP:-rg-tfstate}"
-STORAGE_ACCOUNT="${STORAGE_ACCOUNT:-sttfstateportfolio}"
+STORAGE_ACCOUNT="${STORAGE_ACCOUNT:-sttfstaterajim01}"
 CONTAINER_NAME="${CONTAINER_NAME:-tfstate}"
 
-# ─── Colors for readability ──────────────────────────────────────
+# ─── Colors for readability ───────────────────────────────────────
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 NC='\033[0m'
@@ -39,7 +34,7 @@ log "Creating resource group: $RESOURCE_GROUP in $LOCATION"
 az group create \
   --name "$RESOURCE_GROUP" \
   --location "$LOCATION" \
-  --tags "Purpose=TerraformState" "Env=shared" "Owner=platform-team" \
+  --tags "Purpose=TerraformState" "Env=shared" "Owner=rajim" "CostCenter=portfolio-01" \
   --output none
 
 # ─── Storage Account ──────────────────────────────────────────────
@@ -52,7 +47,7 @@ az storage account create \
   --encryption-services blob \
   --min-tls-version TLS1_2 \
   --allow-blob-public-access false \
-  --tags "Purpose=TerraformState" "Env=shared" "Owner=platform-team" \
+  --tags "Purpose=TerraformState" "Env=shared" "Owner=rajim" "CostCenter=portfolio-01" \
   --output none
 
 # ─── Blob Container ───────────────────────────────────────────────

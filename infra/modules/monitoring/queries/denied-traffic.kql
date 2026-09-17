@@ -1,0 +1,4 @@
+﻿AzureDiagnostics
+| where Category == "AzureFirewallNetworkRule"
+| where tostring(parse_json(tostring(pack_all())).Action_s) == "Deny" or tostring(parse_json(tostring(pack_all())).msg_s) has "Deny"
+| summarize DeniedCount = count() by bin(TimeGenerated, 15m)
