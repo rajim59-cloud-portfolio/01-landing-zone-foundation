@@ -1,9 +1,9 @@
 # ================================================================
-# Local normalisation for Subscription Resource ID
+# Local normalisation for Subscription Identifier
 # ================================================================
 locals {
-  # Ensures subscription_id is consistently formatted as /subscriptions/<uuid>
-  subscription_resource_id = startswith(var.scope_id, "/subscriptions/") ? var.scope_id : "/subscriptions/${var.scope_id}"
+  # Strips any "/subscriptions/" prefix to guarantee pure UUID format
+  subscription_uuid = trimprefix(var.scope_id, "/subscriptions/")
 }
 
 # ================================================================
@@ -12,7 +12,7 @@ locals {
 resource "azurerm_policy_definition" "require_tags" {
   name         = "require-required-tags"
   policy_type  = "Custom"
-  mode         = "Indexed" # Evaluates ONLY resources that support tags, preventing denial on child resources like subnets
+  mode         = "Indexed"
   display_name = "Require CostCenter, Env, and Owner tags"
 
   policy_rule = jsonencode({
@@ -96,7 +96,7 @@ resource "azurerm_policy_definition" "allowed_locations" {
 resource "azurerm_policy_definition" "deny_public_ip" {
   name         = "deny-public-ip"
   policy_type  = "Custom"
-  mode         = "All" # Public IPs must be evaluated under All mode
+  mode         = "All"
   display_name = "Deny public IP addresses except for shared services"
 
   policy_rule = jsonencode({
@@ -128,7 +128,7 @@ resource "azurerm_policy_definition" "deny_public_ip" {
 # ================================================================
 resource "azurerm_subscription_policy_assignment" "require_tags" {
   name                 = "assign-require-tags"
-  subscription_id      = local.subscription_resource_id
+  subscription_id      = local.subscription_uuid
   policy_definition_id = azurerm_policy_definition.require_tags.id
   display_name         = "Require tags on all resources"
   description          = "Requires presence of mandatory governance tags"
@@ -136,7 +136,7 @@ resource "azurerm_subscription_policy_assignment" "require_tags" {
 
 resource "azurerm_subscription_policy_assignment" "allowed_locations" {
   name                 = "assign-allowed-locations"
-  subscription_id      = local.subscription_resource_id
+  subscription_id      = local.subscription_uuid
   policy_definition_id = azurerm_policy_definition.allowed_locations.id
   display_name         = "Allowed locations"
   description          = "Restricts resource creation to approved regions"
@@ -150,7 +150,7 @@ resource "azurerm_subscription_policy_assignment" "allowed_locations" {
 
 resource "azurerm_subscription_policy_assignment" "deny_public_ip" {
   name                 = "assign-deny-public-ip"
-  subscription_id      = local.subscription_resource_id
+  subscription_id      = local.subscription_uuid
   policy_definition_id = azurerm_policy_definition.deny_public_ip.id
   display_name         = "Deny public IPs unless Env=shared"
   description          = "Denies public IPs on non-shared resources"

@@ -4,7 +4,7 @@
 
 # ─── Hub Network (shared platform) ───────────────────────────────
 module "hub_network" {
-  source = "./modules/hub-network"
+  source = "./modules/hub_network"
 
   location = var.location
   tags     = var.tags
@@ -19,7 +19,7 @@ module "hub_network" {
 
 # ─── Spoke: App ──────────────────────────────────────────────────
 module "spoke_app" {
-  source = "./modules/spoke-network"
+  source = "./modules/spoke_network"
 
   name     = "app"
   location = var.location
@@ -31,6 +31,9 @@ module "spoke_app" {
     func = { name = "FunctionSubnet", address_prefix = "10.1.2.0/24" }
   }
 
+  # Route Data spoke CIDR explicitly to firewall (fixes LPM bypass)
+  remote_spoke_cidrs = [var.spoke_data_vnet_cidr]
+
   hub_vnet_id             = module.hub_network.hub_vnet_id
   hub_vnet_name           = module.hub_network.hub_vnet_name
   hub_resource_group_name = module.hub_network.resource_group_name
@@ -41,7 +44,7 @@ module "spoke_app" {
 
 # ─── Spoke: Data ─────────────────────────────────────────────────
 module "spoke_data" {
-  source = "./modules/spoke-network"
+  source = "./modules/spoke_network"
 
   name     = "data"
   location = var.location
@@ -52,6 +55,9 @@ module "spoke_data" {
     data = { name = "DataSubnet", address_prefix = "10.2.1.0/24" }
     pe   = { name = "PrivateEndpointSubnet", address_prefix = "10.2.2.0/24" }
   }
+
+  # Route App spoke CIDR explicitly to firewall (fixes LPM bypass)
+  remote_spoke_cidrs = [var.spoke_app_vnet_cidr]
 
   hub_vnet_id             = module.hub_network.hub_vnet_id
   hub_vnet_name           = module.hub_network.hub_vnet_name
@@ -65,11 +71,10 @@ module "spoke_data" {
 module "policy" {
   source = "./modules/policy"
 
-  scope_id          = "/subscriptions/${var.subscription_id}"
-  allowed_locations = distinct([var.location, "malaysiawest", "southeastasia"])
+  scope_id          = var.subscription_id
+  allowed_locations = [var.location]
   required_tags     = ["CostCenter", "Env", "Owner"]
 }
-
 
 # ─── Identity ─────────────────────────────────────────────────────
 module "identity" {
