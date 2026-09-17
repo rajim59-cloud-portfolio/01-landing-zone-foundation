@@ -1,70 +1,66 @@
-terraform {
-  required_version = ">= 1.5.0"
-  required_providers {
-    azurerm = {
-      source  = "hashicorp/azurerm"
-      version = "~> 3.90"
-    }
-    tls = {
-      source  = "hashicorp/tls"
-      version = "~> 4.0"
-    }
-  }
+# ================================================================
+# Local values — pulled from landing zone remote state
+# ================================================================
+locals {
+  lz = data.terraform_remote_state.landing_zone.outputs
+
+  spoke_app_rg      = local.lz.spoke_app_resource_group_name
+  app_subnet_id     = local.lz.spoke_app_app_subnet_id
+  law_id            = local.lz.log_analytics_workspace_id
+  hub_rg_name       = local.lz.hub_resource_group_name
+
+  vm_name = "vm-pilot-test"
+  nic_name = "nic-pilot-test"
 }
 
-provider "azurerm" {
-  features {}
-  subscription_id = var.subscription_id
+# ================================================================
+# Random password for VM admin (never hardcoded, never in Git)
+# ================================================================
+resource "random_password" "admin" {
+  length           = 24
+  special          = true
+  override_special = "!#$%&*()-_=+[]{}<>:?"
+  min_upper        = 3
+  min_lower        = 3
+  min_numeric      = 3
+  min_special      = 3
 }
 
-# --- Azure Native Data Source: Fetch Spoke App Subnet Directly ---
-data "azurerm_subnet" "spoke_app" {
-  name                 = "AppSubnet"
-  virtual_network_name = "vnet-spoke-app"
-  resource_group_name  = "rg-spoke-app"
-}
-
-# --- SSH Key Generation (No hardcoded credentials) ---
-resource "tls_private_key" "vm_ssh" {
-  algorithm = "RSA"
-  rsa_bits  = 4096
-}
-
-# --- NIC (No Public IP - Fully Private) ---
-resource "azurerm_network_interface" "pilot_vm_nic" {
-  name                = "nic-pilot-vm"
+# ================================================================
+# Network Interface — NO public IP (this is deliberate)
+# ================================================================
+resource "azurerm_network_interface" "pilot" {
+  name                = local.nic_name
   location            = var.location
-  resource_group_name = "rg-spoke-app"
+  resource_group_name = local.spoke_app_rg
+  tags                = var.tags
 
   ip_configuration {
     name                          = "internal"
-    subnet_id                     = data.azurerm_subnet.spoke_app.id
+    subnet_id                     = local.app_subnet_id
     private_ip_address_allocation = "Dynamic"
-  }
-
-  tags = {
-    CostCenter = "portfolio-01"
-    Env        = "dev"
-    Owner      = "rajim"
-    Project    = "pilot-workload"
+    # ⚠️ NO public_ip_address_id — Bastion required for access
   }
 }
 
-# --- Linux Virtual Machine ---
-resource "azurerm_linux_virtual_machine" "pilot_vm" {
-  name                = "vm-pilot-app"
-  resource_group_name = "rg-spoke-app"
-  location            = var.location
-  size                = "Standard_D2s_v4"
-  admin_username      = var.admin_username
+# ================================================================
+# Linux VM — Standard_B1s (cheapest, no premium features)
+# ================================================================
+resource "azurerm_linux_virtual_machine" "pilot" {
+  name                  = local.vm_name
+  location              = var.location
+  resource_group_name   = local.spoke_app_rg
+  size                  = var.vm_size
+  admin_username        = var.admin_username
+  network_interface_ids = [azurerm_network_interface.pilot.id]
+  tags                  = var.tags
 
-  network_interface_ids = [
-    azurerm_network_interface.pilot_vm_nic.id
-  ]
+  admin_password                  = random_password.admin.result
+  disable_password_authentication = false
 
-  admin_ssh_key {
-    username   = var.admin_username
-    public_key = tls_private_key.vm_ssh.public_key_openssh
+  # ─── Managed Identity — no secrets needed to access Key Vault ───
+  identity {
+    type = "SystemAssigned"
   }
 
   os_disk {
@@ -75,14 +71,24 @@ resource "azurerm_linux_virtual_machine" "pilot_vm" {
   source_image_reference {
     publisher = "Canonical"
     offer     = "0001-com-ubuntu-server-jammy"
-    sku       = "22_04-lts"
+    sku       = "22_04-lts-gen2"
     version   = "latest"
   }
 
-  tags = {
-    CostCenter = "portfolio-01"
-    Env        = "dev"
-    Owner      = "rajim"
-    Project    = "pilot-workload"
+  # ─── Boot diagnostics for troubleshooting ────────────────────
+  boot_diagnostics {}
+}
+
+# ================================================================
+# Diagnostic Settings — send VM metrics to central LAW
+# ================================================================
+resource "azurerm_monitor_diagnostic_setting" "pilot_vm" {
+  name                       = "diag-pilot-vm"
+  target_resource_id         = azurerm_linux_virtual_machine.pilot.id
+  log_analytics_workspace_id = local.law_id
+
+  metric {
+    category = "AllMetrics"
+    enabled  = true
   }
 }
