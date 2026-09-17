@@ -2,7 +2,9 @@ name: CI - Plan
 
 on:
   pull_request:
-    branches: [main]
+    branches: [main, develop]
+  push:
+    branches: [develop]
     paths:
       - 'infra/**'
 
@@ -15,7 +17,6 @@ jobs:
   plan:
     name: Terraform Plan
     runs-on: ubuntu-latest
-
     defaults:
       run:
         working-directory: infra
