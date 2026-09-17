@@ -1,10 +1,18 @@
 # ================================================================
+# Local normalisation for Subscription Resource ID
+# ================================================================
+locals {
+  # Ensures subscription_id is consistently formatted as /subscriptions/<uuid>
+  subscription_resource_id = startswith(var.scope_id, "/subscriptions/") ? var.scope_id : "/subscriptions/${var.scope_id}"
+}
+
+# ================================================================
 # Policy Definition: Require Tags
 # ================================================================
 resource "azurerm_policy_definition" "require_tags" {
   name         = "require-required-tags"
   policy_type  = "Custom"
-  mode         = "Indexed"
+  mode         = "Indexed" # Evaluates ONLY resources that support tags, preventing denial on child resources like subnets
   display_name = "Require CostCenter, Env, and Owner tags"
 
   policy_rule = jsonencode({
@@ -16,9 +24,10 @@ resource "azurerm_policy_definition" "require_tags" {
         },
         {
           anyOf = [
-            { field = "tags['CostCenter']", exists = "false" },
-            { field = "tags['Env']", exists = "false" },
-            { field = "tags['Owner']", exists = "false" }
+            for tag in var.required_tags : {
+              field  = "tags['${tag}']"
+              exists = "false"
+            }
           ]
         }
       ]
@@ -29,7 +38,7 @@ resource "azurerm_policy_definition" "require_tags" {
   })
 
   metadata = jsonencode({
-    category = "Tags"
+    category = "Governance"
     version  = "1.0.0"
   })
 }
@@ -45,10 +54,20 @@ resource "azurerm_policy_definition" "allowed_locations" {
 
   policy_rule = jsonencode({
     if = {
-      not = {
-        field = "location"
-        in    = "[parameters('allowedLocations')]"
-      }
+      allOf = [
+        {
+          field = "location"
+          notIn = "[parameters('allowedLocations')]"
+        },
+        {
+          field     = "location"
+          notEquals = "global"
+        },
+        {
+          field     = "type"
+          notEquals = "Microsoft.Resources/subscriptions/resourceGroups"
+        }
+      ]
     }
     then = {
       effect = "deny"
@@ -66,7 +85,7 @@ resource "azurerm_policy_definition" "allowed_locations" {
   })
 
   metadata = jsonencode({
-    category = "General"
+    category = "Governance"
     version  = "1.0.0"
   })
 }
@@ -77,7 +96,7 @@ resource "azurerm_policy_definition" "allowed_locations" {
 resource "azurerm_policy_definition" "deny_public_ip" {
   name         = "deny-public-ip"
   policy_type  = "Custom"
-  mode         = "Indexed"
+  mode         = "All" # Public IPs must be evaluated under All mode
   display_name = "Deny public IP addresses except for shared services"
 
   policy_rule = jsonencode({
@@ -99,26 +118,28 @@ resource "azurerm_policy_definition" "deny_public_ip" {
   })
 
   metadata = jsonencode({
-    category = "Network"
+    category = "Security"
     version  = "1.0.0"
   })
 }
 
 # ================================================================
-# Policy Assignments
+# Policy Assignments (Subscription Scope)
 # ================================================================
 resource "azurerm_subscription_policy_assignment" "require_tags" {
   name                 = "assign-require-tags"
-  subscription_id      = var.scope_id
+  subscription_id      = local.subscription_resource_id
   policy_definition_id = azurerm_policy_definition.require_tags.id
   display_name         = "Require tags on all resources"
+  description          = "Requires presence of mandatory governance tags"
 }
 
 resource "azurerm_subscription_policy_assignment" "allowed_locations" {
   name                 = "assign-allowed-locations"
-  subscription_id      = var.scope_id
+  subscription_id      = local.subscription_resource_id
   policy_definition_id = azurerm_policy_definition.allowed_locations.id
   display_name         = "Allowed locations"
+  description          = "Restricts resource creation to approved regions"
 
   parameters = jsonencode({
     allowedLocations = {
@@ -129,7 +150,8 @@ resource "azurerm_subscription_policy_assignment" "allowed_locations" {
 
 resource "azurerm_subscription_policy_assignment" "deny_public_ip" {
   name                 = "assign-deny-public-ip"
-  subscription_id      = var.scope_id
+  subscription_id      = local.subscription_resource_id
   policy_definition_id = azurerm_policy_definition.deny_public_ip.id
   display_name         = "Deny public IPs unless Env=shared"
+  description          = "Denies public IPs on non-shared resources"
 }
