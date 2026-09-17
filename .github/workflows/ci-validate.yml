@@ -2,7 +2,9 @@ name: CI - Validate
 
 on:
   pull_request:
-    branches: [main]
+    branches: [main, develop]
+  push:
+    branches: [develop]
     paths:
       - 'infra/**'
       - 'tests/**'
@@ -47,4 +49,4 @@ jobs:
       - name: Run TFLint
         run: |
           tflint --init
-          tflint --chdir=infra
+          tflint
