@@ -4,7 +4,7 @@
 
 # ─── Hub Network (shared platform) ───────────────────────────────
 module "hub_network" {
-  source = "./modules/hub_network"
+  source = "./modules/hub-network"
 
   location = var.location
   tags     = var.tags
@@ -19,7 +19,7 @@ module "hub_network" {
 
 # ─── Spoke: App ──────────────────────────────────────────────────
 module "spoke_app" {
-  source = "./modules/spoke_network"
+  source = "./modules/spoke-network"
 
   name     = "app"
   location = var.location
@@ -44,7 +44,7 @@ module "spoke_app" {
 
 # ─── Spoke: Data ─────────────────────────────────────────────────
 module "spoke_data" {
-  source = "./modules/spoke_network"
+  source = "./modules/spoke-network"
 
   name     = "data"
   location = var.location
