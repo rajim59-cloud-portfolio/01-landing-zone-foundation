@@ -28,6 +28,12 @@ variable "subnets" {
   }))
 }
 
+variable "remote_spoke_cidrs" {
+  description = "List of remote spoke CIDRs to route explicitly via Firewall to override peering routes"
+  type        = list(string)
+  default     = []
+}
+
 # ─── Hub Reference ────────────────────────────────────────────────
 variable "hub_vnet_id" {
   description = "Hub VNet resource ID (for peering)"

@@ -86,7 +86,7 @@ resource "azurerm_subnet_network_security_group_association" "spoke" {
 }
 
 # ================================================================
-# Route Table — send all outbound traffic through Firewall
+# Route Table — send outbound and inter-spoke traffic through Firewall
 # ================================================================
 resource "azurerm_route_table" "spoke" {
   name                          = "rt-spoke-${var.name}"
@@ -95,11 +95,23 @@ resource "azurerm_route_table" "spoke" {
   bgp_route_propagation_enabled = false
   tags                          = var.tags
 
+  # Default Route for Internet and unmatched traffic
   route {
-    name                   = "to-firewall"
+    name                   = "to-firewall-default"
     address_prefix         = "0.0.0.0/0"
     next_hop_type          = "VirtualAppliance"
     next_hop_in_ip_address = var.firewall_private_ip
+  }
+
+  # Explicit UDRs for remote spokes to prevent Peering bypass (LPM Fix)
+  dynamic "route" {
+    for_each = var.remote_spoke_cidrs
+    content {
+      name                   = "to-firewall-spoke-${replace(route.value, "/", "-")}"
+      address_prefix         = route.value
+      next_hop_type          = "VirtualAppliance"
+      next_hop_in_ip_address = var.firewall_private_ip
+    }
   }
 }
 
