@@ -1,0 +1,83 @@
+name: Integration Test
+
+on:
+  schedule:
+    - cron: '0 2 * * 1'
+  workflow_dispatch:
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  test:
+    name: Deploy and Test Pilot Workload
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Azure Login (OIDC)
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.6.6
+
+      - name: Terraform Init (pilot)
+        working-directory: tests/pilot-workload
+        run: terraform init
+
+      - name: Terraform Apply (pilot)
+        working-directory: tests/pilot-workload
+        run: |
+          cp terraform.tfvars.example terraform.tfvars
+          sed -i 's/00000000-0000-0000-0000-000000000000/${{ secrets.AZURE_SUBSCRIPTION_ID }}/' terraform.tfvars
+          terraform apply -auto-approve
+
+      - name: Test - Policy DENY (no tags)
+        run: |
+          set +e
+          az storage account create \
+            --name stpolicytest$RANDOM \
+            --resource-group rg-spoke-app \
+            --location malaysiawest \
+            --sku Standard_LRS 2>&1 | tee policy-test.log
+          if grep -q "RequestDisallowedByPolicy" policy-test.log; then
+            echo "Policy DENY test PASSED"
+          else
+            echo "Policy DENY test FAILED"
+            exit 1
+          fi
+
+      - name: Test - Hub-Spoke Peering
+        run: |
+          STATE=$(az network vnet peering list \
+            --resource-group rg-hub-network \
+            --vnet-name vnet-hub \
+            --query "[0].peeringState" -o tsv)
+          if [ "$STATE" = "Connected" ]; then
+            echo "Peering test PASSED"
+          else
+            echo "Peering test FAILED (state: $STATE)"
+            exit 1
+          fi
+
+      - name: Terraform Destroy (pilot)
+        if: always()
+        working-directory: tests/pilot-workload
+        run: terraform destroy -auto-approve
+
+      - name: Upload Test Logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-logs
+          path: policy-test.log
+          retention-days: 7
