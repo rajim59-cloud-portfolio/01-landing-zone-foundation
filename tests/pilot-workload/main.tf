@@ -14,6 +14,7 @@ terraform {
 
 provider "azurerm" {
   features {}
+  subscription_id = var.subscription_id
 }
 
 # --- Azure Native Data Source: Fetch Spoke App Subnet Directly ---
