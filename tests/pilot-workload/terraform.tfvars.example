@@ -1,0 +1,11 @@
+subscription_id = "00000000-0000-0000-0000-000000000000"
+location        = "malaysiawest"
+
+tags = {
+  CostCenter = "portfolio-01"
+  Env        = "dev"
+  Owner      = "rajim"
+  Project    = "landing-zone-foundation"
+}
+
+vm_size = "Standard_B1s"
