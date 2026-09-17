@@ -1,9 +1,7 @@
 name: Integration Test
 
 on:
-  schedule:
-    - cron: '0 2 * * 1'
-  workflow_dispatch:
+  workflow_dispatch: # Manual trigger for integration testing
 
 permissions:
   id-token: write
@@ -13,6 +11,13 @@ jobs:
   test:
     name: Deploy and Test Pilot Workload
     runs-on: ubuntu-latest
+
+    # Terraform AzureRM প্রোভাইডারের OIDC অথেন্টিকেশন
+    env:
+      ARM_USE_OIDC: "true"
+      ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+      ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+      ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
     steps:
       - name: Checkout
@@ -30,6 +35,7 @@ jobs:
         with:
           terraform_version: 1.6.6
 
+      # ─── Pilot Workload ইনিট ও ডিপ্লয় ───────────────────────────────
       - name: Terraform Init (pilot)
         working-directory: tests/pilot-workload
         run: terraform init
@@ -37,10 +43,13 @@ jobs:
       - name: Terraform Apply (pilot)
         working-directory: tests/pilot-workload
         run: |
-          cp terraform.tfvars.example terraform.tfvars
-          sed -i 's/00000000-0000-0000-0000-000000000000/${{ secrets.AZURE_SUBSCRIPTION_ID }}/' terraform.tfvars
-          terraform apply -auto-approve
+          terraform apply \
+            -var="subscription_id=${{ secrets.AZURE_SUBSCRIPTION_ID }}" \
+            -var="location=malaysiawest" \
+            -input=false \
+            -auto-approve
 
+      # ─── ইন্টিগ্রেশন টেস্ট রান ──────────────────────────────────────
       - name: Test - Policy DENY (no tags)
         run: |
           set +e
@@ -50,9 +59,9 @@ jobs:
             --location malaysiawest \
             --sku Standard_LRS 2>&1 | tee policy-test.log
           if grep -q "RequestDisallowedByPolicy" policy-test.log; then
-            echo "Policy DENY test PASSED"
+            echo "✅ Policy DENY test PASSED"
           else
-            echo "Policy DENY test FAILED"
+            echo "❌ Policy DENY test FAILED"
             exit 1
           fi
 
@@ -63,12 +72,13 @@ jobs:
             --vnet-name vnet-hub \
             --query "[0].peeringState" -o tsv)
           if [ "$STATE" = "Connected" ]; then
-            echo "Peering test PASSED"
+            echo "✅ Peering test PASSED"
           else
-            echo "Peering test FAILED (state: $STATE)"
+            echo "❌ Peering test FAILED (state: $STATE)"
             exit 1
           fi
 
+      # ─── ক্লিনআপ ও টিয়ারডাউন ($০ বিলিং নিশ্চিতকরণ) ────────────────
       - name: Terraform Destroy (pilot)
         if: always()
         working-directory: tests/pilot-workload
