@@ -5,9 +5,9 @@ variable "subscription_id" {
 }
 
 variable "location" {
-  description = "Azure region for all resources"
+  description = "Primary Azure region for all landing zone resources"
   type        = string
-  default     = "eastus"
+  default     = "malaysiawest"
 }
 
 # ─── Tags (enforced by Azure Policy) ──────────────────────────────

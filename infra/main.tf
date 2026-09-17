@@ -66,7 +66,7 @@ module "policy" {
   source = "./modules/policy"
 
   scope_id          = "/subscriptions/${var.subscription_id}"
-  allowed_locations = ["malaysiawest", "southeastasia"]
+  allowed_locations = distinct([var.location, "malaysiawest", "southeastasia"])
   required_tags     = ["CostCenter", "Env", "Owner"]
 }
 
