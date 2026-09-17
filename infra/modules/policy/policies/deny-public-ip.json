@@ -1,0 +1,17 @@
+﻿{
+  "if": {
+    "allOf": [
+      {
+        "field": "type",
+        "equals": "Microsoft.Network/publicIPAddresses"
+      },
+      {
+        "field": "tags['Env']",
+        "notEquals": "shared"
+      }
+    ]
+  },
+  "then": {
+    "effect": "deny"
+  }
+}

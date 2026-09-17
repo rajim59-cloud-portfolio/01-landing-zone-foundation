@@ -1,0 +1,4 @@
+﻿AzureDiagnostics
+| where Category == "AzureFirewallNetworkRule"
+| summarize Count = count() by SourceIP
+| top 5 by Count desc
