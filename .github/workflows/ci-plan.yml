@@ -22,7 +22,6 @@ jobs:
       run:
         working-directory: infra
 
-    # Terraform-কে OIDC এবং Azure Credentials চেনানোর জন্য এনভায়রনমেন্ট ভ্যারিয়েবল
     env:
       ARM_USE_OIDC: "true"
       ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
@@ -49,7 +48,12 @@ jobs:
         run: terraform init
 
       - name: Terraform Plan
-        run: terraform plan -out=tfplan -no-color
+        run: |
+          terraform plan \
+            -var="alert_email=${{ secrets.ALERT_EMAIL }}" \
+            -input=false \
+            -out=tfplan \
+            -no-color
 
       - name: Upload Plan Artifact
         uses: actions/upload-artifact@v4
