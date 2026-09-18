@@ -109,10 +109,10 @@ cd F:\rajim59-cloud-portfolio\01-landing-zone-foundation
 | Documentation File | Description |
 | --- | --- |
 | [HANDOVER.md](https://www.google.com/search?q=HANDOVER.md&utm_source=gemini) | **Integration contract** detailing outputs, remote state usage, and rules for downstream projects (Project 2+) |
-| [docs/architecture.md](https://www.google.com/search?q=docs/architecture.md&utm_source=gemini) | Detailed network topology, CIDR allocations, DNS routing, and Management Group hierarchy |
-| [docs/decisions.md](https://www.google.com/search?q=docs/decisions.md&utm_source=gemini) | Architecture Decision Records (ADRs) justifying SKU choices, routing logic, and trade-offs |
-| [docs/cost.md](https://www.google.com/search?q=docs/cost.md&utm_source=gemini) | Detailed cost modeling, SKU optimizations, and zero-cost ephemeral lab strategies |
-| [docs/testing.md](https://www.google.com/search?q=docs/testing.md&utm_source=gemini) | Audit logs, execution outputs, and evidence across all 13 validation test scenarios |
+| [docs/architecture.md](docs/architecture.md)| Detailed network topology, CIDR allocations, DNS routing, and Management Group hierarchy |
+| [docs/decisions.md](docs/decisions.md) | Architecture Decision Records (ADRs) justifying SKU choices, routing logic, and trade-offs |
+| [docs/cost.md](docs/cost.md) | Detailed cost modeling, SKU optimizations, and zero-cost ephemeral lab strategies |
+| [docs/testing.md](docs/testing.md) | Audit logs, execution outputs, and evidence across all 13 validation test scenarios |
 
 ---
 
@@ -134,14 +134,10 @@ This platform foundation is validated against a comprehensive 13-point test suit
 * **Tests 5–8:** Bidirectional peering verification, firewall egress interception, RBAC group enforcement, and zero-cost destruction.
 * **Tests 9–13:** Management Group hierarchy review, Private DNS resolution, Defender CSPM activation, Subscription Vending execution, and Windows automation runs.
 
-Complete audit logs and screenshots are cataloged in [docs/testing.md](https://www.google.com/search?q=docs/testing.md&utm_source=gemini).
+Complete audit logs and screenshots are cataloged in [docs/testing.md](docs/testing.md).
 
 ---
 
 ## 📄 License
 
-This project is licensed under the [MIT License](https://www.google.com/search?q=LICENSE&utm_source=gemini).
-
-```
-
-```
+This project is licensed under the [MIT License](LICENSE).
