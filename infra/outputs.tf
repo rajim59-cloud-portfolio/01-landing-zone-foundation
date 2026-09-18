@@ -45,3 +45,21 @@ output "cloud_engineers_group_id" {
   description = "cloud-engineers group object ID"
   value       = module.identity.cloud_engineers_group_id
 }
+output "spoke_app_app_subnet_id" {
+  description = "App subnet ID in Spoke-App (consumed by pilot workloads)"
+  value       = module.spoke_app.subnet_ids["app"]
+}
+
+output "hub_resource_group_name" {
+  description = "Hub resource group name"
+  value       = module.hub_network.resource_group_name
+}
+
+output "spoke_app_resource_group_name" {
+  description = "Spoke-App resource group name"
+  value       = module.spoke_app.resource_group_name
+}
+output "private_dns_zone_ids" {
+  description = "Private DNS zone IDs"
+  value       = module.private_dns.zone_ids
+}

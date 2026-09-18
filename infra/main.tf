@@ -101,3 +101,38 @@ module "monitoring" {
   spoke_app_vnet_id    = module.spoke_app.vnet_id
   spoke_data_vnet_id   = module.spoke_data.vnet_id
 }
+
+# ─── Management Groups (CAF Hierarchy — Enterprise Architecture Design) ───
+# Kept as code/design standard. Requires Tenant Root Group write permissions
+# in multi-subscription enterprise tenants.
+# module "management_groups" {
+#   source = "./modules/management-groups"
+#
+#   root_management_group_id   = data.azurerm_client_config.current.tenant_id
+#   platform_subscription_ids  = [var.subscription_id]
+#   workloads_subscription_ids = []
+#   sandbox_subscription_ids   = []
+# }
+
+# ─── Private DNS Zones ───────────────────────────────────────────
+module "private_dns" {
+  source = "./modules/private-dns"
+
+  location                = var.location
+  tags                    = var.tags
+  hub_resource_group_name = module.hub_network.resource_group_name
+  hub_vnet_id             = module.hub_network.hub_vnet_id
+  spoke_vnet_ids = {
+    app  = module.spoke_app.vnet_id
+    data = module.spoke_data.vnet_id
+  }
+}
+
+# ─── Defender for Cloud (Foundational CSPM Free Tier) ───────────
+module "defender" {
+  source = "./modules/defender"
+
+  alert_email            = var.alert_email
+  enable_servers_pricing = false
+  enable_cspm            = false
+}
