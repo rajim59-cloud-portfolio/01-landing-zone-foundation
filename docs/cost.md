@@ -114,5 +114,3 @@ For production enterprise workloads requiring higher scale, the following archit
 | **Bastion** | Basic SKU | Standard SKU with IP Connect & Native Client | +$150/mo |
 | **Log Storage** | Pay-As-You-Go (30-day retention) | Dedicated Cluster / Commitment Tiers (365 days) | Volume-dependent |
 | **Compute** | On-Demand Instances | 1-Year or 3-Year Azure Reserved Instances (RI) | 30% to 50% savings |
-
-```

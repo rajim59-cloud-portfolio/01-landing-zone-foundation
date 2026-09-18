@@ -397,7 +397,3 @@ cd F:\rajim59-cloud-portfolio\01-landing-zone-foundation
 | `.github/workflows/ci-plan.yml` | Pull Request (`main`) | Speculative `plan` artifact generation | OIDC Federated Credential |
 | `.github/workflows/cd-apply.yml` | Push (`main`) | Protected manual approval gate, automated `apply` | OIDC Federated Credential |
 | `.github/workflows/integration-test.yml` | Weekly Schedule (`0 2 * * 1`) | Deploys Pilot, asserts Policies & Routes, tears down | OIDC Federated Credential |
-
-```
-
-```
