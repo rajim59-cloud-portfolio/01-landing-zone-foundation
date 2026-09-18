@@ -59,3 +59,7 @@ output "spoke_app_resource_group_name" {
   description = "Spoke-App resource group name"
   value       = module.spoke_app.resource_group_name
 }
+output "private_dns_zone_ids" {
+  description = "Private DNS zone IDs"
+  value       = module.private_dns.zone_ids
+}
