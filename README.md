@@ -108,7 +108,7 @@ cd F:\rajim59-cloud-portfolio\01-landing-zone-foundation
 
 | Documentation File | Description |
 | --- | --- |
-| [HANDOVER.md](https://www.google.com/search?q=HANDOVER.md&utm_source=gemini) | **Integration contract** detailing outputs, remote state usage, and rules for downstream projects (Project 2+) |
+| [HANDOVER.md](HANDOVER.md) | **Integration contract** detailing outputs, remote state usage, and rules for downstream projects (Project 2+) |
 | [docs/architecture.md](docs/architecture.md)| Detailed network topology, CIDR allocations, DNS routing, and Management Group hierarchy |
 | [docs/decisions.md](docs/decisions.md) | Architecture Decision Records (ADRs) justifying SKU choices, routing logic, and trade-offs |
 | [docs/cost.md](docs/cost.md) | Detailed cost modeling, SKU optimizations, and zero-cost ephemeral lab strategies |

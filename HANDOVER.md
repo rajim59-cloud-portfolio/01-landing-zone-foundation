@@ -123,7 +123,3 @@ Before deploying Project 2 or subsequent applications, teams must complete this 
 * [ ] Virtual machines and app instances configured without public IPs.
 * [ ] Diagnostic settings wired to stream metrics and audit logs directly to `law-landing-zone`.
 * [ ] Workload budget alerts established with notification thresholds set at 80% and 100%.
-
-```
-
-```

@@ -1,26 +1,20 @@
-# Comprehensive Testing & Validation Audit
+## Test Summary Matrix
 
-This document records the end-to-end testing matrix, execution commands, observable terminal evidence, and validation results across all 13 architectural scenarios for the Azure Landing Zone Foundation (`malaysiawest`).
-
----
-
-## Test Summary
-
-| # | Test Scenario | Verification Type | Status | Evidence / Screenshot |
-| --- | --- | --- | --- | --- |
-| 1 | Terraform Validate | Static Code Quality | ✅ Pass | [`docs/screenshots/terraform-validate.png`](https://www.google.com/search?q=screenshots/terraform-validate.png&utm_source=gemini) |
-| 2 | Terraform Plan | Dry-Run Engine | ✅ Pass | [`docs/screenshots/terraform-plan.png`](https://www.google.com/search?q=screenshots/terraform-plan.png&utm_source=gemini) |
-| 3 | Policy DENY (Missing Tags) | Governance Gate | ✅ Pass | [`docs/screenshots/policy-denied.png`](https://www.google.com/search?q=screenshots/policy-denied.png&utm_source=gemini) |
-| 4 | Policy ALLOW (Tagged Workload) | Workload Provisioning | ✅ Pass | [`docs/screenshots/policy-allowed.png`](https://www.google.com/search?q=screenshots/policy-allowed.png&utm_source=gemini) |
-| 5 | Hub ↔ Spoke Peering | Network Topology | ✅ Pass | [`docs/screenshots/test-05-peering.png`](https://www.google.com/search?q=screenshots/test-05-peering.png&utm_source=gemini) |
-| 6 | Spoke → Firewall → Internet | Route Table & Egress | ✅ Pass | [`docs/screenshots/test-06-firewall-egress.png`](https://www.google.com/search?q=screenshots/test-06-firewall-egress.png&utm_source=gemini) |
-| 7 | RBAC Least-Privilege | Identity Security | ✅ Pass | [`docs/screenshots/test-07-rbac.png`](https://www.google.com/search?q=screenshots/test-07-rbac.png&utm_source=gemini) |
-| 8 | Destroy → Zero Cost | Teardown & Billing | ✅ Pass | [`docs/screenshots/test-08-zero-cost.png`](https://www.google.com/search?q=screenshots/test-08-zero-cost.png&utm_source=gemini) |
-| 9 | Management Group Hierarchy | Architecture Governance | ✅ Pass | Code Review / Architecture Contract |
-| 10 | Central Private DNS Resolution | Network Integration | ✅ Pass | Terminal Output (3 Zones + 7 Links) |
-| 11 | Defender for Cloud (CSPM) | Security Posture | ✅ Pass | Terminal Output (Free Tier + Alert Contact) |
-| 12 | Subscription Vending Module | Enterprise AVM Pattern | ✅ Pass | Static Code Quality & Execution Plan |
-| 13 | Windows Automation Scripts | Script Execution | ✅ Pass | Native PowerShell Test Run Output |
+| # | Test Scenario | Verification Type | Validation Method | Status | Evidence Reference |
+|---|---|---|---|:---:|---|
+| 1 | Terraform Validate | Static Code Quality | CLI Syntax Engine | ✅ Pass | [CLI Log: Test 1](#test-1-terraform-validate) |
+| 2 | Terraform Plan | Dry-Run Engine | Speculative Graph | ✅ Pass | [CLI Log: Test 2](#test-2-terraform-plan) |
+| 3 | Policy DENY (Missing Tags) | Governance Gate | Azure ARM API Rejection | ✅ Pass | [CLI Log: Test 3](#test-3-policy-deny-no-tags) |
+| 4 | Policy ALLOW (Tagged Workload) | Workload Provisioning | ARM Deployment Success | ✅ Pass | [CLI Log: Test 4](#test-4-policy-allow-with-tags) |
+| 5 | Hub ↔ Spoke Peering | Network Topology | Azure CLI & Portal Query | ✅ Pass | [`docs/screenshots/test-05-peering.png`](screenshots/test-05-peering.png) |
+| 6 | Spoke → Firewall → Internet | Route Table & Egress | UDR Next-Hop Query | ✅ Pass | [`docs/screenshots/test-06-firewall-egress.png`](screenshots/test-06-firewall-egress.png) |
+| 7 | RBAC Least-Privilege | Identity Security | Entra ID Group Assertion | ✅ Pass | [`docs/screenshots/test-07-rbac.png`](screenshots/test-07-rbac.png) |
+| 8 | Destroy → Zero Cost | Teardown & Billing | Resource Inventory Audit | ✅ Pass | [`docs/screenshots/test-08-zero-cost.png`](screenshots/test-08-zero-cost.png) |
+| 9 | Management Group Hierarchy | Architecture Governance | Design & Root Gate Audit | ✅ Pass | [Architecture Contract](#test-9-management-group-hierarchy) |
+| 10 | Central Private DNS Resolution | Network Integration | Azure Private DNS API | ✅ Pass | [CLI Log: Test 10](#test-10-central-private-dns-resolution) |
+| 11 | Defender for Cloud (CSPM) | Security Posture | Security Contact API | ✅ Pass | [CLI Log: Test 11](#test-11-defender-for-cloud-cspm) |
+| 12 | Subscription Vending Module | Enterprise AVM Pattern | Targeted Plan & Syntax | ✅ Pass | [CLI Log: Test 12](#test-12-subscription-vending-module) |
+| 13 | Windows Automation Scripts | Script Execution | PowerShell Runtime | ✅ Pass | [CLI Log: Test 13](#test-13-windows-automation-scripts) |
 
 ---
 
@@ -29,14 +23,9 @@ This document records the end-to-end testing matrix, execution commands, observa
 **Objective:** Validate that configuration syntax, module contracts, and provider versions comply with HashiCorp HCL standards without accessing cloud backends.
 
 **Command:**
-
 ```powershell
 cd infra
 terraform fmt -recursive
-terraform validate
-
-cd ..\tests\pilot-workload
-terraform fmt -check
 terraform validate
 
 ```
@@ -49,7 +38,7 @@ Success! The configuration is valid.
 ```
 
 * **Status:** ✅ Pass
-* **Screenshot:** `docs/screenshots/terraform-validate.png`
+* **Evidence Type:** Local CLI Execution Log
 
 ---
 
@@ -73,7 +62,7 @@ Plan: 61 to add, 0 to change, 0 to destroy.
 ```
 
 * **Status:** ✅ Pass
-* **Screenshot:** `docs/screenshots/terraform-plan.png`
+* **Evidence Type:** Remote State Speculative Dry-Run Log
 
 ---
 
@@ -103,7 +92,7 @@ Reason: tags['CostCenter'] - Exists = false
 ```
 
 * **Status:** ✅ Pass
-* **Screenshot:** `docs/screenshots/policy-denied.png`
+* **Evidence Type:** Azure Resource Manager (ARM) API Interception Log
 
 ---
 
@@ -136,7 +125,7 @@ vm_private_ip = "10.1.1.4"
 ```
 
 * **Status:** ✅ Pass
-* **Screenshot:** `docs/screenshots/policy-allowed.png`
+* **Evidence Type:** Workload Apply Log
 
 ---
 
@@ -195,7 +184,7 @@ VirtualAppliance 10.0.1.4     10.2.0.0/16  to-spoke-data
 
 ```
 
-*Note: Outbound queries routed toward the Internet encounter the central Firewall Private Appliance IP (`10.0.1.4`), where the Zero-Trust default policy inspects and drops unauthorized egress connections.*
+*Note: Outbound traffic routed toward 0.0.0.0/0 is intercepted by the central Firewall Private IP (`10.0.1.4`), enforcing centralized security perimeter controls.*
 
 * **Status:** ✅ Pass
 * **Screenshot:** `docs/screenshots/test-06-firewall-egress.png`
@@ -239,11 +228,11 @@ security-auditors  e0356700-597b-462c-a820-22b55d3e452b  True
 **Command:**
 
 ```powershell
-# 1. Base landing zone teardown
+# Base landing zone teardown
 cd infra
 terraform destroy -var-file="local.tfvars" -auto-approve
 
-# 2. Resource inventory audit
+# Resource inventory audit
 az resource list --query "[].{Name:name, Type:type, ResourceGroup:resourceGroup}" -o table
 
 ```
@@ -285,15 +274,8 @@ Tenant Root Group
 ```
 
 
-* **Tenant Root Verification:**
-```powershell
-az rest --method get --url "https://management.azure.com/providers/Microsoft.Management/managementGroups?api-version=2020-05-01"
-
-```
-
-
-* **Observed Boundary:** Restriced by tenant root permissions on personal and student accounts (`AuthorizationFailed`). The HCL configuration is maintained in `modules/management-groups/` as the target production standard.
-* **Status:** ✅ Pass (Design Reviewed & Validated)
+* **Tenant Boundary Notice:** Evaluated against root tenant permissions (`AuthorizationFailed` on personal tenant roots). The complete production HCL definition is maintained under `modules/management-groups/`.
+* **Status:** ✅ Pass (Architecture Review)
 
 ---
 
@@ -323,6 +305,7 @@ privatelink.vaultcore.azure.net          rg-hub-network
 ```
 
 * **Status:** ✅ Pass
+* **Evidence Type:** Azure CLI Query Log
 
 ---
 
@@ -347,12 +330,13 @@ rajim59.dev@gmail.com  default  +1-555-555-5555
 ```
 
 * **Status:** ✅ Pass
+* **Evidence Type:** Microsoft.Security Contact API Query Log
 
 ---
 
 ## Test 12: Subscription Vending Module
 
-**Objective:** Validate programmatic workload onboarding logic modeling the Azure Verified Module (AVM) subscription vending pattern (Resource Group, VNet, Route Table, Peering, and Budget).
+**Objective:** Validate programmatic workload onboarding logic modeling the Azure Verified Module (AVM) subscription vending pattern.
 
 **Command:**
 
@@ -371,12 +355,13 @@ Success! The configuration is valid.
 ```
 
 * **Status:** ✅ Pass
+* **Evidence Type:** Terraform Validation Log
 
 ---
 
 ## Test 13: Windows Automation Scripts
 
-**Objective:** Validate Windows PowerShell governance automation scripts for pre-deployment checks (`validate-tags.ps1`) and clean environment teardown (`destroy.ps1`).
+**Objective:** Validate Windows PowerShell governance automation scripts for pre-deployment checks (`validate-tags.ps1`).
 
 **Command:**
 
@@ -400,6 +385,7 @@ cd F:\rajim59-cloud-portfolio\01-landing-zone-foundation
 ```
 
 * **Status:** ✅ Pass
+* **Evidence Type:** PowerShell Script Output Log
 
 ---
 
@@ -411,3 +397,7 @@ cd F:\rajim59-cloud-portfolio\01-landing-zone-foundation
 | `.github/workflows/ci-plan.yml` | Pull Request (`main`) | Speculative `plan` artifact generation | OIDC Federated Credential |
 | `.github/workflows/cd-apply.yml` | Push (`main`) | Protected manual approval gate, automated `apply` | OIDC Federated Credential |
 | `.github/workflows/integration-test.yml` | Weekly Schedule (`0 2 * * 1`) | Deploys Pilot, asserts Policies & Routes, tears down | OIDC Federated Credential |
+
+```
+
+```
