@@ -26,6 +26,18 @@ resource "azurerm_subnet" "spoke" {
   resource_group_name  = azurerm_resource_group.spoke.name
   virtual_network_name = azurerm_virtual_network.spoke.name
   address_prefixes     = [each.value.address_prefix]
+
+  # App Service VNet Integration Delegation (Only on "app" subnet)
+  dynamic "delegation" {
+    for_each = each.key == "app" ? [1] : []
+    content {
+      name = "delegation-appservice"
+      service_delegation {
+        name    = "Microsoft.Web/serverFarms"
+        actions = ["Microsoft.Network/virtualNetworks/subnets/action"]
+      }
+    }
+  }
 }
 
 # ================================================================
